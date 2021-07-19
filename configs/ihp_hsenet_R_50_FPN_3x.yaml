@@ -1,0 +1,28 @@
+_BASE_: "Base-RCNN-FPN.yaml"
+MODEL:
+  WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+  RESNETS:
+    DEPTH: 50
+  MASK_ON: False
+  KEYPOINT_ON: False
+  ROI_HEADS:
+    NAME: "StandardROIHeads"
+    NUM_CLASSES: 6
+  ROI_BOX_HEAD:
+    SMOOTH_L1_BETA: 0.5  # Keypoint AP degrades (though box AP improves) when using plain L1 loss
+  RPN:
+    # Detectron1 uses 2000 proposals per-batch, but this option is per-image in detectron2.
+    # 1000 proposals per-image is found to hurt box AP.
+    # Therefore we increase it to 1500 per-image.
+    POST_NMS_TOPK_TRAIN: 1500
+OUTPUT_DIR: "checkpoints/hsenet_R_50_FPN_3x"
+DATASETS:
+  TRAIN: ("IHP2021_train",)
+  TEST: ("IHP2021_test",)
+  #TRAIN: ("coco_2017_train",)
+  #TEST: ("coco_2017_val",)
+  #TRAIN: ("keypoints_coco_2017_train",)
+  #TEST: ("keypoints_coco_2017_val",)
+SOLVER:
+  STEPS: (210000, 250000)
+  MAX_ITER: 270000
