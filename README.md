@@ -37,3 +37,17 @@ python train_net.py --config configs/ihp_hsenet_R_50_FPN_3x.yaml --num-gpus 8 --
 [5] Y. Wu, A. Kirillov, F. Massa, Wan-Yen Lo and R. Girshick, "Detectron2," https://github.com/facebookresearch/detectron2, 2019.
 
 [6] J. Brooks, “COCO Annotator,” https://github.com/jsbroks/coco-annotator/, 2019.
+
+---
+If you find our work useful please cite
+```bibtex
+@INPROCEEDINGS{9663782,  author={Bae, Kangmin and Yun, Kimin and Cho, Jungchan and Bae, Yuseok},  
+booktitle={2021 17th IEEE International Conference on Advanced Video and Signal Based Surveillance (AVSS)},   
+title={The Dataset and Baseline Models to Detect Human Postural States Robustly against Irregular Postures},   
+year={2021},  
+volume={},  
+number={},  
+pages={1-8},  
+doi={10.1109/AVSS52988.2021.9663782}
+}
+```
