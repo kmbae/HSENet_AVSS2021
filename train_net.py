@@ -24,7 +24,7 @@ import torch
 import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
-from detectron2.data import MetadataCatalog
+from detectron2.data import MetadataCatalog, DatasetCatalog
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
 from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
@@ -39,8 +39,18 @@ from detectron2.evaluation import (
 )
 from detectron2.modeling import GeneralizedRCNNWithTTA
 
-from detectron2.data.datasets import register_coco_instances
-from detectron2.data.datasets.builtin_meta import COCO_PERSON_KEYPOINT_NAMES, COCO_PERSON_KEYPOINT_FLIP_MAP, KEYPOINT_CONNECTION_RULES
+from detectron2.data.datasets.builtin_meta import (
+    COCO_PERSON_KEYPOINT_NAMES,
+    COCO_PERSON_KEYPOINT_FLIP_MAP,
+    KEYPOINT_CONNECTION_RULES
+)
+
+# HSENet
+from hsenet.data.datasets import register_coco_instances
+from hsenet.modeling.roi_heads.roi_heads import HSENetROIHeads
+from hsenet.config.config import add_posture_config
+from hsenet.data import DatasetMapper, build_detection_train_loader#, build_detection_test_loader
+
 
 dataset_root = 'datasets/'
 
@@ -48,10 +58,15 @@ meta = {
         "keypoint_names": COCO_PERSON_KEYPOINT_NAMES,
         "keypoint_flip_map": COCO_PERSON_KEYPOINT_FLIP_MAP,
         "keypoint_connection_rules": KEYPOINT_CONNECTION_RULES,
+        #"thing_classes": ['Walking', 'Crouch', 'Lying', 'Standing', 'Running', 'Sitting'],
         }
 
-register_coco_instances("IHP2021_train", meta, dataset_root + "IHP2021/annotations/instances_IHP_train2021.json", dataset_root + "IHP2021/train2021")
-register_coco_instances("IHP2021_test", meta, dataset_root + "IHP2021/annotations/instances_IHP_test2021.json", dataset_root + "IHP2021/test2021")
+register_coco_instances("IHP_train", meta, dataset_root + "IHP/annotations/instances_mphbE_train2020.json", dataset_root + "IHP/train2020", dataset_source=0)
+register_coco_instances("IHP_test", meta, dataset_root + "IHP/annotations/instances_mphbE_test2020.json", dataset_root + "IHP/test2020", dataset_source=0)
+register_coco_instances("IHP-E_train", meta, dataset_root + "IHP-E/annotations/instances_mphbE_train2021.json", dataset_root + "IHP-E/train2021", dataset_source=0)
+register_coco_instances("IHP-E_test", meta, dataset_root + "IHP-E/annotations/instances_mphbE_test2021.json", dataset_root + "IHP-E/test2021", dataset_source=0)
+register_coco_instances("keypoints_coco_2017_train_mphbe", meta, dataset_root + "coco/annotations/person_keypoints_train2017.json", dataset_root + "coco/train2017", dataset_source=1)
+register_coco_instances("keypoints_coco_2017_val_mphbe", meta, dataset_root + "coco/annotations/person_keypoints_val2017.json", dataset_root + "coco/val2017", dataset_source=1)
 
 class Trainer(DefaultTrainer):
     """
@@ -127,12 +142,29 @@ class Trainer(DefaultTrainer):
         res = OrderedDict({k + "_TTA": v for k, v in res.items()})
         return res
 
+    #@classmethod
+    #def build_test_loader(cls, cfg, dataset_name):
+    #    #return build_detection_test_loader(cfg, dataset_name, mapper=None)
+    #    return build_detection_test_loader(cfg, dataset_name, mapper=DatasetMapper(cfg, False))
+
+    @classmethod
+    def build_train_loader(cls, cfg):
+        #print(cfg)
+        #return build_detection_train_loader(cfg, mapper=None)
+        #tmp = build_detection_train_loader(cfg, mapper=DatasetMapper(cfg, True))
+        #tmptmp = iter(tmp)
+        #print(tmptmp.next())
+        #raise Exception('Process ended')
+        #return tmp
+        return build_detection_train_loader(cfg, mapper=DatasetMapper(cfg, True))
+
 
 def setup(args):
     """
     Create configs and perform basic setups.
     """
     cfg = get_cfg()
+    add_posture_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
